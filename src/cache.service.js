@@ -11,28 +11,31 @@ async function set(key = "", value = {}) {
   console.log("cache store -", cacheStore);
 }
 
-async function get(key = "") {
-  if (Reflect.has(cacheStore, key)) {
-    return cacheStore[key];
-  }
-
-  const result = await database.getUser(key);
+async function getUser(key = "") {
+  let result = getUserFromCache(key);
 
   if (result) {
-    const cacheStoreMemStatus = checkCacheStoreSize();
-    if (cacheStoreMemStatus) {
-      deleteStaleCache();
-    }
+    return result;
+  }
+
+  result = await getUserFromDB(key);
+
+  if (result) {
     set(result._id.toString(), result);
     return result;
   }
 }
 
-async function invalidate(key = "") {
+function getUserFromCache(key = "") {
   if (Reflect.has(cacheStore, key)) {
-    delete cacheStore[key];
-    console.log("invalidate cache store -", cacheStore);
+    return cacheStore[key];
   }
+}
+
+async function getUserFromDB(key) {
+  const result = await database.getUser(key);
+
+  return result;
 }
 
 function checkCacheStoreSize(length = 3) {
@@ -45,6 +48,5 @@ function deleteStaleCache() {
 
 module.exports = {
   set,
-  get,
-  invalidate,
+  getUser,
 };

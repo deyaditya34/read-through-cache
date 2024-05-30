@@ -18,6 +18,7 @@ async function start() {
 
   server.use(express.json());
 
+  server.post("/", insertUser);
   server.get("/users", getUser);
   server.put("/users/:id", updateUser);
 
@@ -30,10 +31,30 @@ start().catch((err) => {
   console.log("[fatal]: could not start the server", err);
 });
 
-async function getUser(req, res) {
-  const { id } = req.body;
+async function insertUser(req, res) {
+  const {username, password} = req.body;
 
-  let result = await cacheService.get(id);
+  if (!username || !password) {
+    res.json({
+      success: false,
+      message: "either username or password missing."
+    })
+    return;
+  }
+
+  await database.insertUser({username, password});
+
+  res.json({
+    success: true,
+    message: "user inserted"
+  })
+}
+
+
+async function getUser(req, res) {
+  const { id } = req.query;
+
+  let result = await cacheService.getUser(id);
 
   if (result) {
     res.json({

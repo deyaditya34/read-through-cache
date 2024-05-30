@@ -8,7 +8,7 @@ let database = null;
 async function initialize() {
   await mongoclient.connect();
 
-  database = mongoclient.db("iternary-builder");
+  database = mongoclient.db("read-through-cache");
 }
 
 function getCollection(collectionName) {
@@ -32,8 +32,12 @@ async function updateUser(id, updateDetails) {
     {
       _id: new ObjectId(id),
     },
-    { $set:  updateDetails  }
+    { $set: updateDetails }
   );
 }
 
-module.exports = { initialize, getCollection, getUser, updateUser };
+async function insertUser(userDetails) {
+  return getCollection("user").insertOne(userDetails);
+}
+
+module.exports = { initialize, getUser, updateUser, insertUser };
